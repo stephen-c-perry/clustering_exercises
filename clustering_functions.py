@@ -12,32 +12,26 @@ from sklearn.preprocessing import MinMaxScaler
 
 
 
-def plot_cluster_inertia_k(df, col1, col2):
-
-#train, val_test split so that clustering is only done on train
-    #seed = 123
-    #train, val_test = train_test_split(df,train_size=.7, random_state=seed)
-    #should split be here in the function?
-
-
+def plot_cluster_inertia_k(train, col1, col2):
 
 #initialize variable to be reference later, taking in arguments for features/columns
-    X = df[[col1, col2]]
+    X = train[[col1, col2]]
 
 #fit kmeans algo to columns then predict
 
-#Put scaling here?
+#scaling
+    scaler = MinMaxScaler()
+    X = scaler.fit_transform(X)
 
-    #scaler = MinMaxScaler()
     kmeans = KMeans(n_clusters = 3)
 
     kmeans.fit(X)
 
 #assign predictions to original dataframe
-    df['clustering'] = kmeans.predict(X)
+    train['clustering'] = kmeans.predict(X)
 
 #plot cluster predictions, take in argument for column of predictions
-    X_plot = sns.scatterplot(x = df[col1], y = df[col2], hue = df['clustering'])
+    X_plot = sns.scatterplot(x = train[col1], y = train[col2], hue = train['clustering'])
 
 #plot inertia over k increasing, take in argument for column of predictions
     with plt.style.context('seaborn-whitegrid'):
