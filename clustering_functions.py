@@ -38,3 +38,20 @@ def plot_cluster_inertia_k(train, col1, col2):
         plt.ylabel('inertia')
         plt.title('Change in inertia as k increases')
     
+
+
+#function that creates a new dataframe describing the amount and percentage of missing values for each feature in the given dataframe
+def check_missing_values(df):
+
+    cols = ['name', 'num_rows_missing', 'percent_rows_missing']
+    df_1 = pd.DataFrame(columns=cols)
+    
+    for col in list(df.columns):
+        num_rows_missing = df[col].isna().sum()
+        percent_rows_missing = num_rows_missing / df.shape[0]
+        df_2 = pd.DataFrame([{'name': col, 'num_rows_missing': num_rows_missing,
+                               'percent_rows_missing': percent_rows_missing}])
+        df_1 = pd.concat([df_1, df_2], axis=0)
+    
+    df_1.set_index('name', inplace=True)    
+    return df_1
