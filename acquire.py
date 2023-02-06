@@ -21,98 +21,48 @@ def get_mall_data():
 
 def sql_zillow_data():
     sql_query = """
-                    SELECT prop.*,
-                        predictions_2017.logerror,
-                        predictions_2017.transactiondate as Transaction_Date,
-                        air.airconditioningdesc as AC_type,
-                        arch.architecturalstyledesc as Architectural_Style,
-                        build.buildingclassdesc as Building_Class,
-                        heat.heatingorsystemdesc as Heating_or_System,
-                        land.propertylandusedesc as Property_Land_Use,
-                        story.storydesc as Stories,
-                        type.typeconstructiondesc as Construction_Type
+                    SELECT prop.*, predictions_2017.logerror, predictions_2017.transactiondate, 
+                            air.airconditioningdesc, arch.architecturalstyledesc, build.buildingclassdesc, 
+                            heat.heatingorsystemdesc, land.propertylandusedesc, story.storydesc, 
+                            type.typeconstructiondesc
                     FROM properties_2017 prop
                     JOIN (
-                        SELECT parcelid, MAX(transactiondate) AS Max_Transaction_Date
+                        SELECT parcelid, MAX(transactiondate) AS max_transactiondate
                         FROM predictions_2017
                         GROUP BY parcelid
-                        ) pred USING(parcelid)
-                    JOIN predictions_2017 ON pred.parcelid = predictions_2017.parcelid
-                        AND pred.max_transactiondate = predictions_2017.transactiondate
-                    LEFT JOIN airconditioningtype USING(airconditioningtypeid)
-                    LEFT JOIN architecturalstyletype USING(architecturalstyletypeid)
-                    LEFT JOIN buildingclasstype USING(buildingclasstypeid)
-                    LEFT JOIN heatingorsystemtype USING(heatingorsystemtypeid)
-                    LEFT JOIN propertylandusetype USING(propertylandusetypeid)
-                    LEFT JOIN storytype USING(storytypeid)
-                    LEFT JOIN typeconstructiontype USING(typeconstructiontypeid)
+                    ) pred 
+                    ON prop.parcelid = pred.parcelid
+                    JOIN predictions_2017 
+                    ON pred.parcelid = predictions_2017.parcelid
+                    AND pred.max_transactiondate = predictions_2017.transactiondate
+                    LEFT JOIN airconditioningtype air 
+                    ON prop.airconditioningtypeid = air.airconditioningtypeid
+                    LEFT JOIN architecturalstyletype arch 
+                    ON prop.architecturalstyletypeid = arch.architecturalstyletypeid
+                    LEFT JOIN buildingclasstype build 
+                    ON prop.buildingclasstypeid = build.buildingclasstypeid
+                    LEFT JOIN heatingorsystemtype heat 
+                    ON prop.heatingorsystemtypeid = heat.heatingorsystemtypeid
+                    LEFT JOIN propertylandusetype land 
+                    ON prop.propertylandusetypeid = land.propertylandusetypeid
+                    LEFT JOIN storytype story 
+                    ON prop.storytypeid = story.storytypeid
+                    LEFT JOIN typeconstructiontype type 
+                    ON prop.typeconstructiontypeid = type.typeconstructiontypeid
                     WHERE propertylandusedesc = "Single Family Residential"
-                        AND transactiondate <= '2017-12-31'
-                        AND prop.longitude IS NOT NULL
-                        AND prop.latitude IS NOT NULL
+                    AND transactiondate <= '2017-12-31'
+                    AND prop.longitude IS NOT NULL
+                    AND prop.latitude IS NOT NULL;
+
                 """
     df = pd.read_sql(sql_query, env.get_connection('zillow'))
     return df
 
 
-
-
-'''
-  SELECT prop.*,
-        predictions_2017.logerror,
-        predictions_2017.transactiondate as Transaction_Date,
-        air.airconditioningdesc as A/C_type,
-        arch.architecturalstyledesc as Architectural_Style,
-        build.buildingclassdesc as Building_Class,
-        heat.heatingorsystemdesc as Heating_or_System,
-        land.propertylandusedesc as Property_Land_Use,
-        story.storydesc as Stories,
-        type.typeconstructiondesc as Construction_Type
-        FROM properties_2017 prop
-        JOIN (
-            SELECT parcelid, MAX(transactiondate) AS Max_Transaction_Date
-            FROM predictions_2017
-            GROUP BY parcelid
-            ) pred USING(parcelid)
-        JOIN predictions_2017 ON pred.parcelid = predictions_2017.parcelid
-                          AND pred.max_transactiondate = predictions_2017.transactiondate
-        LEFT JOIN airconditioningtype air USING(airconditioningtypeid)
-        LEFT JOIN architecturalstyletype arch USING(architecturalstyletypeid)
-        LEFT JOIN buildingclasstype build USING(buildingclasstypeid)
-        LEFT JOIN heatingorsystemtype heat USING(heatingorsystemtypeid)
-        LEFT JOIN propertylandusetype land USING(propertylandusetypeid)
-        LEFT JOIN storytype story USING(storytypeid)
-        LEFT JOIN typeconstructiontype type USING(typeconstructiontypeid)
-        WHERE propertylandusedesc = "Single Family Residential"
-            AND transactiondate <= '2017-12-31'
-            AND prop.longitude IS NOT NULL
-            AND prop.latitude IS NOT NULL
-'''
-
-
-
 def get_zillow_data():
-    if os.path.isfile('zillow.csv'):
-        df = pd.read_csv('zillow.csv', index_col=0)
+    if os.path.isfile('zillow_trim.csv'):
+        df = pd.read_csv('zillow_trim.csv', index_col=0)
     else:
         df = sql_zillow_data()
-        df.to_csv('zillow.csv')
+        df.to_csv('zillow_trim.csv')
     return df
-
-
-
-
-
-#original query brought over from regression project
-    '''
-     select prop.parcelid as parcel_id, prop.id as property_id, prop.bathroomcnt, prop.bedroomcnt, prop.regionidzip, prop.yearbuilt, prop.calculatedfinishedsquarefeet, prop.fips, prop.taxvaluedollarcnt
-                from predictions_2017 as pred
-                join properties_2017 as prop 
-                on pred.parcelid = prop.parcelid
-                where transactiondate is not null and
-                propertylandusetypeid = 261 and
-                regionidzip is not null and
-                yearbuilt is not null and
-                calculatedfinishedsquarefeet is not null and
-                prop.taxvaluedollarcnt is not null;
-    '''
